@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 IDENTITY = ((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1))
+DEFAULT_TOLERANCE_MM = 0.1
 INDEX_FORMATS = {5121: "B", 5123: "H", 5125: "I"}
 GEOMETRY_EXTENSIONS = {
     "EXT_mesh_gpu_instancing", "EXT_meshopt_compression", "KHR_meshopt_compression",
@@ -221,6 +222,44 @@ def nonnegative_mm(text):
     return value
 
 
+def contract_mm(value, field):
+    message = f"{field} must be a finite, nonnegative JSON number in millimeters."
+    if type(value) not in (int, float):
+        raise ValueError(message)
+    try:
+        return nonnegative_mm(value)
+    except (argparse.ArgumentTypeError, OverflowError):
+        raise ValueError(message) from None
+
+
+def read_expectation(path):
+    try:
+        contract = json.loads(path.read_text(encoding="utf-8-sig"))
+    except UnicodeDecodeError:
+        raise ValueError("Expected UTF-8 text.") from None
+    except json.JSONDecodeError as error:
+        raise ValueError(f"Invalid JSON: {error}") from None
+
+    if not isinstance(contract, dict):
+        raise ValueError("Expected a JSON object.")
+    for field in contract:
+        if field not in ("expected_mm", "tolerance_mm"):
+            raise ValueError(f"Unknown field {field!r}.")
+
+    expected = contract.get("expected_mm")
+    if not isinstance(expected, dict):
+        raise ValueError("expected_mm must be an object with x, y, and z fields.")
+    for axis in expected:
+        if axis not in ("x", "y", "z"):
+            field = f"expected_mm.{axis}"
+            raise ValueError(f"Unknown field {field!r}.")
+
+    return (
+        [contract_mm(expected.get(axis), f"expected_mm.{axis}") for axis in "xyz"],
+        contract_mm(contract.get("tolerance_mm", DEFAULT_TOLERANCE_MM), "tolerance_mm"),
+    )
+
+
 def diagnose_mismatch(dimensions, expected, tolerance, axes):
     diagnosis = {"type": "axis_mismatch", "out_of_tolerance_axes": axes}
     if len(axes) == 1:
@@ -329,9 +368,22 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=Path, help="Path to a static GLB 2.0 file.")
     parser.add_argument("--expected-mm", nargs=3, type=nonnegative_mm, metavar=("X", "Y", "Z"))
-    parser.add_argument("--tolerance-mm", type=nonnegative_mm, default=0.1, help="Per-axis tolerance (default: 0.1).")
+    parser.add_argument("--tolerance-mm", type=nonnegative_mm, help="Per-axis tolerance (default: 0.1).")
+    parser.add_argument("--expect", type=Path, metavar="PATH", help="Read expected dimensions and tolerance from JSON.")
     parser.add_argument("--svg", type=Path, metavar="PATH", help="Write an SVG card for the JSON report.")
     args = parser.parse_args()
+    if args.expect is not None:
+        if args.expected_mm is not None:
+            parser.error("--expect cannot be combined with --expected-mm.")
+        if args.tolerance_mm is not None:
+            parser.error("--expect cannot be combined with --tolerance-mm.")
+        try:
+            args.expected_mm, args.tolerance_mm = read_expectation(args.expect)
+        except (OSError, ValueError, RecursionError) as error:
+            print(f"Expectation file {args.expect}: {error}", file=sys.stderr)
+            return 2
+    elif args.tolerance_mm is None:
+        args.tolerance_mm = DEFAULT_TOLERANCE_MM
     try:
         dimensions = measure_mm(*read_glb(args.file))
     except (OSError, ValueError, KeyError, IndexError, TypeError, AttributeError, OverflowError, struct.error) as error:
@@ -353,8 +405,11 @@ def main():
             )
     if args.svg is not None:
         try:
-            if args.svg.exists() and args.svg.samefile(args.file):
-                raise ValueError("SVG output must differ from the input GLB.")
+            if args.svg.exists():
+                if args.svg.samefile(args.file):
+                    raise ValueError("SVG output must differ from the input GLB.")
+                if args.expect is not None and args.svg.samefile(args.expect):
+                    raise ValueError("SVG output must differ from the input expectation file.")
             args.svg.write_bytes(render_svg(report).encode("utf-8"))
         except (OSError, ValueError) as error:
             print(f"Cannot write SVG: {error}", file=sys.stderr)

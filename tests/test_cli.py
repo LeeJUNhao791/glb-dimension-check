@@ -1,4 +1,5 @@
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -53,6 +54,108 @@ class CheckGLB(unittest.TestCase):
         self.assertEqual(report["diagnosis"]["type"], "unit_scale")
         self.assertEqual(report["diagnosis"]["scale_factor"], 1000)
         self.assertEqual(report["diagnosis"]["out_of_tolerance_axes"], ["x", "y", "z"])
+
+    def test_expect_matches_explicit_dimensions(self):
+        contract = ROOT / "examples/expected.json"
+        for model, exit_code in (("correct.glb", 0), ("1000x-too-large.glb", 1)):
+            with self.subTest(model=model), tempfile.TemporaryDirectory() as directory:
+                model_path = ROOT / "examples" / model
+                explicit_svg = Path(directory) / "explicit.svg"
+                contract_svg = Path(directory) / "contract.svg"
+                baseline = self.run_cli(
+                    model_path, "--expected-mm", "120", "80", "40", "--svg", str(explicit_svg),
+                )
+                result = self.run_cli(model_path, "--expect", str(contract), "--svg", str(contract_svg))
+                self.assertEqual(result.returncode, exit_code, result.stderr)
+                self.assertEqual(result.stdout, baseline.stdout)
+                self.assertEqual(contract_svg.read_bytes(), explicit_svg.read_bytes())
+
+    def test_expect_applies_contract_tolerance_and_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "expected.json"
+            model = ROOT / "examples/correct.glb"
+            contract = {"expected_mm": {"z": 40, "x": 121, "y": 80}}
+            path.write_text(json.dumps(contract), encoding="utf-8")
+            result = self.run_cli(model, "--expect", str(path))
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["tolerance_mm"], 0.1)
+
+            contract["tolerance_mm"] = 1.1
+            path.write_text(json.dumps(contract), encoding="utf-8-sig")
+            result = self.run_cli(model, "--expect", str(path))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["tolerance_mm"], 1.1)
+            self.assertEqual(report["expected_mm"], {"x": 121, "y": 80, "z": 40})
+
+    def test_invalid_expect_reports_field(self):
+        valid_dimensions = '"expected_mm":{"x":120,"y":80,"z":40}'
+        cases = (
+            (b'{"expected_mm":', "JSON"),
+            (b'\xff', "UTF-8"),
+            (b'[]', "JSON object"),
+            (b'{}', "expected_mm"),
+            (b'{"expected_mm":[120,80,40]}', "expected_mm"),
+            (b'{"expected_mm":{"x":120,"y":80}}', "expected_mm.z"),
+            (b'{"expected_mm":{"x":120,"y":80,"z":40,"w":0}}', "expected_mm.w"),
+            (b'{"expected_mm":{"x":true,"y":80,"z":40}}', "expected_mm.x"),
+            (b'{"expected_mm":{"x":120,"y":"80","z":40}}', "expected_mm.y"),
+            (b'{"expected_mm":{"x":120,"y":80,"z":-1}}', "expected_mm.z"),
+            (f'{{{valid_dimensions},"tolerance_mm":NaN}}'.encode(), "tolerance_mm"),
+            (f'{{{valid_dimensions},"tolerance_mm":1e999}}'.encode(), "tolerance_mm"),
+            (f'{{{valid_dimensions},"tolerance_mm":-0.1}}'.encode(), "tolerance_mm"),
+            (f'{{{valid_dimensions},"tolerance_mm":null}}'.encode(), "tolerance_mm"),
+            (f'{{{valid_dimensions},"tolerence_mm":1}}'.encode(), "tolerence_mm"),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "expected.json"
+            svg = Path(directory) / "card.svg"
+            for data, field in cases:
+                with self.subTest(data=data):
+                    path.write_bytes(data)
+                    result = self.run_cli(
+                        ROOT / "examples/correct.glb", "--expect", str(path), "--svg", str(svg),
+                    )
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn("Expectation file", result.stderr)
+                    self.assertIn(field, result.stderr)
+                    self.assertEqual(result.stdout, "")
+                    self.assertFalse(svg.exists())
+
+    def test_missing_expect_reports_file_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.json"
+            result = self.run_cli(ROOT / "examples/correct.glb", "--expect", str(missing))
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Expectation file", result.stderr)
+            self.assertIn("missing.json", result.stderr)
+            self.assertEqual(result.stdout, "")
+
+    def test_expect_rejects_explicit_dimension_and_tolerance_flags(self):
+        contract = ROOT / "examples/expected.json"
+        for arguments in (("--expected-mm", "120", "80", "40"), ("--tolerance-mm", "0.1")):
+            with self.subTest(flag=arguments[0]):
+                result = self.run_cli(ROOT / "examples/correct.glb", "--expect", str(contract), *arguments)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn(f"--expect cannot be combined with {arguments[0]}", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+    def test_svg_cannot_overwrite_expect(self):
+        contract = (ROOT / "examples/expected.json").read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "expected.json"
+            path.write_bytes(contract)
+            alias = Path(directory) / "alias.svg"
+            os.link(path, alias)
+            for output in (path, alias):
+                with self.subTest(output=output):
+                    result = self.run_cli(
+                        ROOT / "examples/correct.glb", "--expect", str(path), "--svg", str(output),
+                    )
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn("SVG output must differ from the input expectation file", result.stderr)
+                    self.assertEqual(path.read_bytes(), contract)
+                    self.assertEqual(result.stdout, "")
 
     def test_inverse_scale_error(self):
         result = self.run_cli(ROOT / "examples/correct.glb", "--expected-mm", "120000", "80000", "40000")
