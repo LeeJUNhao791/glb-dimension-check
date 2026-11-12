@@ -26,6 +26,8 @@ python scripts/check_glb.py model.glb --expected-mm 120 80 40
 - On a mismatch, report the out-of-tolerance axes in `diagnosis`. Treat
   `unit_scale` and `axis_permutation` as clues about export units or input axis
   order. The check uses the original X/Y/Z order.
+- When the user requests a shareable card, pass `--svg PATH` and provide the
+  resulting file. The script writes the card for both passing and failing checks.
 - For unsupported inputs, report the script's error and request a static
   GLB 2.0 export with embedded, uncompressed float32 geometry.
 

@@ -23,7 +23,28 @@ millimeters. Omit `--expected-mm` to measure only.
 | --- | --- |
 | 0 | `pass` or `measured` |
 | 1 | `fail`. At least one axis exceeded the tolerance. |
-| 2 | Unsupported input, invalid geometry, or command-line error. |
+| 2 | Unsupported input, invalid geometry, command-line error, or SVG write error. |
+
+## Export an SVG dimension card
+
+Add `--svg PATH` to save a shareable card alongside the JSON on stdout. The
+card shows the measured, expected, and signed deviation values for X, Y, and Z,
+plus the result. It uses the same report as the JSON and formats numbers for
+display. Measurement-only cards show dashes for expected values and deviations.
+The tool also writes a card when a check fails with exit code 1.
+
+```sh
+python scripts/check_glb.py examples/correct.glb --expected-mm 120 80 40 --svg examples/correct.svg
+python scripts/check_glb.py examples/1000x-too-large.glb --expected-mm 120 80 40 --svg examples/1000x-too-large.svg
+```
+
+**Correct dimensions**
+
+![PASS card for the 120 × 80 × 40 mm sample](examples/correct.svg)
+
+**1000× scale error**
+
+![FAIL card for a GLB exported at 1000 times the expected scale](examples/1000x-too-large.svg)
 
 ## Diagnose a mismatch
 

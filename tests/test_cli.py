@@ -5,10 +5,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_glb.py"
+SVG = {"svg": "http://www.w3.org/2000/svg"}
 
 
 class CheckGLB(unittest.TestCase):
@@ -124,6 +126,49 @@ class CheckGLB(unittest.TestCase):
         self.assertNotIn("diagnosis", report)
         for axis, expected in zip("xyz", (141.421356, 70.710678, 40)):
             self.assertAlmostEqual(report["dimensions_mm"][axis], expected, places=4)
+
+    def test_svg_matches_json_for_pass_fail_and_measurement(self):
+        cases = [
+            ("correct.glb", ("--expected-mm", "120", "80", "40"), "pass", 0),
+            ("1000x-too-large.glb", ("--expected-mm", "120", "80", "40"), "fail", 1),
+            ("measure-only.glb", (), "measured", 0),
+        ]
+        for name, arguments, status, exit_code in cases:
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
+                output = Path(directory) / "card.svg"
+                result = self.run_cli(ROOT / "examples" / name, *arguments, "--svg", str(output))
+                self.assertEqual(result.returncode, exit_code, result.stderr)
+                report = json.loads(result.stdout)
+                card = ElementTree.parse(output).getroot()
+                self.assertEqual(report["status"], status)
+                self.assertEqual(card.findtext(".//svg:text[@id='status']", namespaces=SVG), status.upper())
+                for axis in "xyz":
+                    row = card.find(f".//svg:g[@data-axis='{axis}']", SVG)
+                    self.assertIsNotNone(row)
+                    for field in ("dimensions_mm", "expected_mm", "deviation_mm"):
+                        cell = row.find(f"svg:text[@data-field='{field}']", SVG)
+                        self.assertIsNotNone(cell)
+                        if field in report:
+                            self.assertEqual(float(cell.attrib["data-value-mm"]), report[field][axis])
+                        else:
+                            self.assertEqual(cell.text, "\u2014")
+
+    def test_svg_output_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "missing" / "card.svg"
+            result = self.run_cli(ROOT / "examples/correct.glb", "--svg", str(output))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Cannot write SVG", result.stderr)
+
+    def test_svg_cannot_overwrite_input(self):
+        raw = (ROOT / "examples/correct.glb").read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "model.glb"
+            path.write_bytes(raw)
+            result = self.run_cli(path, "--svg", str(path))
+            self.assertEqual(path.read_bytes(), raw)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("must differ from the input", result.stderr)
 
     def test_unsupported_extension(self):
         result = self.run_cli("example.obj")

@@ -254,11 +254,83 @@ def diagnose_mismatch(dimensions, expected, tolerance, axes):
     return diagnosis
 
 
+def svg_number(value, signed=False):
+    if value == 0:
+        return "0"
+    sign = "+" if signed else ""
+    if abs(value) < 0.001 or abs(value) >= 1e9:
+        return format(value, f"{sign}.4g")
+    return format(value, f"{sign},.3f").rstrip("0").rstrip(".")
+
+
+def render_svg(report):
+    status = report["status"]
+    badge, ink = {
+        "pass": ("#dcfce7", "#166534"),
+        "fail": ("#fee2e2", "#991b1b"),
+        "measured": ("#dbeafe", "#1e40af"),
+    }[status]
+    diagnosis = report.get("diagnosis", {})
+    failed_axes = diagnosis.get("out_of_tolerance_axes", ())
+    rows = []
+    for axis, y in zip("xyz", (157, 201, 245)):
+        rows.append(f'    <g data-axis="{axis}">')
+        rows.append(f'      <text x="40" y="{y}" font-weight="700">{axis.upper()}</text>')
+        for field, x in (("dimensions_mm", 264), ("expected_mm", 420), ("deviation_mm", 598)):
+            value = report.get(field, {}).get(axis)
+            is_deviation = field == "deviation_mm"
+            color = "#991b1b" if is_deviation and axis in failed_axes else "#17253a"
+            if value is None:
+                label, data = "—", ""
+            else:
+                label = svg_number(value, signed=is_deviation)
+                data = f' data-value-mm="{value}"'
+            rows.append(
+                f'      <text data-field="{field}"{data} x="{x}" y="{y}" fill="{color}" '
+                f'text-anchor="end" font-family="Consolas, monospace">{label}</text>'
+            )
+        rows.append("    </g>")
+    table = "\n".join(rows)
+    footer = "Measurement only"
+    if "tolerance_mm" in report:
+        footer = f'Per-axis tolerance ±{svg_number(report["tolerance_mm"])} mm'
+    if diagnosis.get("type") == "unit_scale":
+        footer += f' · Check export units (×{svg_number(diagnosis["scale_factor"])})'
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="640" height="308" viewBox="0 0 640 308"
+     role="img" aria-labelledby="card-title">
+  <title id="card-title">GLB Dimension Check · {status.upper()}</title>
+  <rect x="0.5" y="0.5" width="639" height="307" rx="16" fill="#ffffff" stroke="#cbd5e1"/>
+  <g font-family="Arial, sans-serif" fill="#17253a">
+    <text x="24" y="45" font-size="26" font-weight="700">GLB Dimension Check</text>
+    <text x="24" y="66" font-size="13" fill="#475569">World-axis dimensions in millimeters</text>
+    <rect x="492" y="23" width="124" height="36" rx="18" fill="{badge}"/>
+    <text id="status" x="554" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="{ink}">{status.upper()}</text>
+    <rect x="24" y="88" width="592" height="174" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+    <path d="M24 130H616 M24 174H616 M24 218H616" fill="none" stroke="#e2e8f0"/>
+    <g font-size="13" font-weight="700" fill="#475569">
+      <text x="40" y="114">Axis</text>
+      <g text-anchor="end">
+        <text x="264" y="114">Measured</text>
+        <text x="420" y="114">Expected</text>
+        <text x="598" y="114">Deviation</text>
+      </g>
+    </g>
+    <g font-size="17">
+{table}
+    </g>
+    <text x="24" y="287" font-size="13" fill="#475569">{footer}</text>
+  </g>
+</svg>
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=Path, help="Path to a static GLB 2.0 file.")
     parser.add_argument("--expected-mm", nargs=3, type=nonnegative_mm, metavar=("X", "Y", "Z"))
     parser.add_argument("--tolerance-mm", type=nonnegative_mm, default=0.1, help="Per-axis tolerance (default: 0.1).")
+    parser.add_argument("--svg", type=Path, metavar="PATH", help="Write an SVG card for the JSON report.")
     args = parser.parse_args()
     try:
         dimensions = measure_mm(*read_glb(args.file))
@@ -279,6 +351,14 @@ def main():
             report["diagnosis"] = diagnose_mismatch(
                 dimensions, args.expected_mm, args.tolerance_mm, axes,
             )
+    if args.svg is not None:
+        try:
+            if args.svg.exists() and args.svg.samefile(args.file):
+                raise ValueError("SVG output must differ from the input GLB.")
+            args.svg.write_bytes(render_svg(report).encode("utf-8"))
+        except (OSError, ValueError) as error:
+            print(f"Cannot write SVG: {error}", file=sys.stderr)
+            return 2
     print(json.dumps(report, indent=2))
     return int(report["status"] == "fail")
 
