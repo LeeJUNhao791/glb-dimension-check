@@ -46,13 +46,28 @@ Use `--expect PATH` on its own or with `--svg PATH`. Passing `--expected-mm` or
 `--tolerance-mm` alongside `--expect` is a command-line error. A dimension
 mismatch still returns exit code 1 and writes the SVG when requested.
 
+## Check your own GLB
+
+1. Run `python scripts/check_glb.py model.glb` to see the exported X, Y, and Z
+   dimensions in millimeters.
+2. Map the dimensions from your drawing or CAD model to the exported GLB axes.
+   Use those reference values in `--expected-mm X Y Z`.
+
+The export can change the axis order. For example, the Hammond 1590B enclosure
+we tested measured X/Y/Z = 112.4/31.0/60.5 mm in STEP and 112.4/60.5/31.0 mm
+after export to a Y-up GLB. That export passed with
+`--expected-mm 112.4 60.5 31.0` at the default 0.1 mm tolerance.
+[Hammond 1590B drawing](https://www.hammfg.com/files/parts/pdf/1590B.pdf)
+
 ## Export an SVG dimension card
 
 Add `--svg PATH` to save a shareable card alongside the JSON on stdout. The
 card shows the measured, expected, and signed deviation values for X, Y, and Z,
 plus the result. It uses the same report as the JSON and formats numbers for
 display. Measurement-only cards show dashes for expected values and deviations.
-The tool also writes a card when a check fails with exit code 1.
+
+Run the following commands separately. The second returns exit code 1 for
+the intentional scale error and writes the FAIL card.
 
 ```sh
 python scripts/check_glb.py examples/correct.glb --expected-mm 120 80 40 --svg examples/correct.svg
