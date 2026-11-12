@@ -17,13 +17,34 @@ python scripts/check_glb.py examples/correct.glb --expected-mm 120 80 40
 Use `--expected-mm X Y Z` in scene-axis order. The check passes when all three
 axes are within `--tolerance-mm`, which defaults to 0.1 mm. The JSON report
 includes measured dimensions, expected dimensions, and signed deviations in
-millimeters. Omit `--expected-mm` to measure only.
+millimeters. Run the script with just the GLB path to measure only.
 
 | Exit code | Meaning |
 | --- | --- |
 | 0 | `pass` or `measured` |
 | 1 | `fail`. At least one axis exceeded the tolerance. |
-| 2 | Unsupported input, invalid geometry, command-line error, or SVG write error. |
+| 2 | Unsupported input, invalid geometry or expectation file, command-line error, or SVG write error. |
+
+## Check against a JSON expectation file
+
+Copy [examples/expected.json](examples/expected.json) to save the expected
+dimensions and tolerance for a model. The template checks the included
+120 × 80 × 40 mm example.
+
+```sh
+python scripts/check_glb.py examples/correct.glb --expect examples/expected.json
+python scripts/check_glb.py examples/1000x-too-large.glb --expect examples/expected.json --svg scale-error.svg
+```
+
+Save the file as UTF-8 JSON. Set `expected_mm.x`, `expected_mm.y`, and
+`expected_mm.z` to the expected dimensions in the GLB scene's X, Y, and Z axes.
+The optional `tolerance_mm` is a single tolerance for each axis and defaults
+to 0.1 mm. All four values must be finite, nonnegative JSON numbers. The CLI
+rejects unknown fields and reports invalid fields on stderr with exit code 2.
+
+Use `--expect PATH` on its own or with `--svg PATH`. Passing `--expected-mm` or
+`--tolerance-mm` alongside `--expect` is a command-line error. A dimension
+mismatch still returns exit code 1 and writes the SVG when requested.
 
 ## Export an SVG dimension card
 

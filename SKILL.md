@@ -16,8 +16,12 @@ python scripts/check_glb.py model.glb --expected-mm 120 80 40
 
 - Map expected dimensions to the scene's X, Y, and Z axes in millimeters. Ask
   which axis corresponds to each dimension when the order is ambiguous.
-- For a measurement without a reference, omit `--expected-mm` and report the
-  measured axes. Use `--tolerance-mm` if the user supplies a per-axis tolerance.
+- For an existing JSON expectation file, pass `--expect PATH`. See
+  [examples/expected.json](examples/expected.json) for the format. Use one
+  source for the reference values. Combining `--expect` with
+  `--expected-mm` or `--tolerance-mm` is a command-line error.
+- For a measurement without a reference, pass the GLB path alone. For inline
+  dimensions, use `--tolerance-mm` if the user supplies a per-axis tolerance.
   The default is 0.1 mm.
 - Read the JSON status and report each measured dimension, its expected value,
   and signed deviation when available. Exit 0 means pass or measurement only.
