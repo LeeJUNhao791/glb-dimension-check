@@ -23,6 +23,9 @@ python scripts/check_glb.py model.glb --expected-mm 120 80 40
   and signed deviation when available. Exit 0 means pass or measurement only.
   Exit 1 means at least one axis exceeds tolerance. Exit 2 means input or usage
   error.
+- On a mismatch, report the out-of-tolerance axes in `diagnosis`. Treat
+  `unit_scale` and `axis_permutation` as clues about export units or input axis
+  order. The check uses the original X/Y/Z order.
 - For unsupported inputs, report the script's error and request a static
   GLB 2.0 export with embedded, uncompressed float32 geometry.
 

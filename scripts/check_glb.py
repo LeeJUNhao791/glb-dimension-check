@@ -6,6 +6,7 @@ import json
 import math
 import struct
 import sys
+from itertools import permutations
 from pathlib import Path
 
 
@@ -47,7 +48,10 @@ def read_glb(path):
     if model.get("animations") or model.get("skins"):
         raise ValueError("Animations and skins are outside the static GLB scope.")
     unsupported = GEOMETRY_EXTENSIONS.intersection(model.get("extensionsUsed", []))
-    unsupported.update(model.get("extensionsRequired", []))
+    unsupported.update(
+        extension for extension in model.get("extensionsRequired", [])
+        if extension != "KHR_materials_unlit"
+    )
     if unsupported:
         raise ValueError(f"Unsupported glTF extensions: {', '.join(sorted(unsupported))}.")
 
@@ -217,6 +221,39 @@ def nonnegative_mm(text):
     return value
 
 
+def diagnose_mismatch(dimensions, expected, tolerance, axes):
+    diagnosis = {"type": "axis_mismatch", "out_of_tolerance_axes": axes}
+    if len(axes) == 1:
+        return diagnosis
+
+    for factor in (1000, 0.001):
+        if all(
+            reference > 0
+            and math.isclose(actual / reference, factor, rel_tol=0, abs_tol=factor * 0.01)
+            for actual, reference in zip(dimensions, expected)
+        ):
+            return {
+                **diagnosis,
+                "type": "unit_scale",
+                "scale_factor": factor,
+                "hint": "Check the export units (meters versus millimeters).",
+            }
+
+    expected_by_axis = dict(zip("xyz", expected))
+    for order in permutations("xyz"):
+        if all(
+            abs(actual - expected_by_axis[axis]) <= tolerance
+            for actual, axis in zip(dimensions, order)
+        ):
+            return {
+                **diagnosis,
+                "type": "axis_permutation",
+                "axis_mapping": dict(zip("xyz", order)),
+                "hint": "Check the model orientation and the order of the expected axes.",
+            }
+    return diagnosis
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=Path, help="Path to a static GLB 2.0 file.")
@@ -231,13 +268,17 @@ def main():
     report = {"status": "measured", "dimensions_mm": dict(zip("xyz", dimensions))}
     if args.expected_mm is not None:
         deviation = [actual - expected for actual, expected in zip(dimensions, args.expected_mm)]
-        passed = all(abs(value) <= args.tolerance_mm for value in deviation)
+        axes = [axis for axis, value in zip("xyz", deviation) if abs(value) > args.tolerance_mm]
         report.update(
-            status="pass" if passed else "fail",
+            status="fail" if axes else "pass",
             expected_mm=dict(zip("xyz", args.expected_mm)),
             deviation_mm=dict(zip("xyz", deviation)),
             tolerance_mm=args.tolerance_mm,
         )
+        if axes:
+            report["diagnosis"] = diagnose_mismatch(
+                dimensions, args.expected_mm, args.tolerance_mm, axes,
+            )
     print(json.dumps(report, indent=2))
     return int(report["status"] == "fail")
 
