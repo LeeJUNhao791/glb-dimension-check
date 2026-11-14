@@ -6,6 +6,36 @@ before handing off a model for web 3D or AR.
 
 静态 GLB 尺寸验收工具。读取场景的 X、Y、Z 轴尺寸，按毫米与预期尺寸比较。
 
+[Try the browser demo locally](#browser-demo) · [Run the CLI](#quick-start)
+
+## Browser demo
+
+From the repository root, run `python -m http.server 8000 --bind 127.0.0.1`
+and open [the local demo](http://127.0.0.1:8000/). Use **Pass example** or
+**1000× scale error** to check the bundled models against 120 × 80 × 40 mm
+with a 0.1 mm tolerance. To check your own static GLB, drop it onto the file
+area or choose it, enter the expected X/Y/Z dimensions and tolerance in
+millimeters, and select **Check dimensions**. Both PASS and FAIL results let
+you download the SVG card.
+
+The demo runs the CLI checker in the browser with Pyodide. The first check
+loads the Python runtime from jsDelivr. Local GLB files stay in the browser.
+Use the [CLI](#quick-start) for offline checks, measurement-only reports,
+JSON expectation files, or automation with exit codes.
+
+To verify the result with the CLI, run either command from the repository root
+and compare the generated card with the browser download. The second command
+returns exit code 1 and still writes the SVG.
+
+```sh
+python scripts/check_glb.py examples/correct.glb --expect examples/expected.json --svg pass.svg
+python scripts/check_glb.py examples/1000x-too-large.glb --expect examples/expected.json --svg fail.svg
+```
+
+To publish the static demo with GitHub Pages, choose **Deploy from a branch**
+under **Settings → Pages**. Select the branch containing the demo and its
+**/(root)** folder. The page uses relative paths and requires no build step.
+
 ## Quick start
 
 Use Python 3.8 or newer. The script uses only the Python standard library.

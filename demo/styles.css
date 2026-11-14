@@ -1,0 +1,125 @@
+:root {
+  color-scheme: light;
+  font-family: "Atkinson Hyperlegible Next", "Segoe UI", sans-serif;
+  color: #142a28;
+  background: #eef2ed;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; }
+
+main {
+  width: min(100% - 2rem, 680px);
+  margin: 3rem auto;
+}
+
+header { border-bottom: 3px solid #173e37; }
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  letter-spacing: -.045em;
+  line-height: 1.05;
+}
+
+p { line-height: 1.55; }
+
+fieldset {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem 0;
+  border: 0;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.examples span { margin-right: .25rem; }
+
+button, input, #download { font: inherit; }
+
+button, #download {
+  display: inline-block;
+  width: fit-content;
+  padding: .5rem .75rem;
+  border: 1px solid #53726a;
+  border-radius: .25rem;
+  background: white;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:disabled, input:disabled { opacity: .65; cursor: wait; }
+button:not(:disabled):hover, #download:hover { background: #dfece3; }
+
+#drop-zone {
+  display: grid;
+  gap: .5rem;
+  padding: 1rem;
+  border: 1px dashed #53726a;
+  border-radius: .25rem;
+  background: #f7faf6;
+}
+
+#drop-zone.dragging { background: #dfece3; border-style: solid; }
+
+.dimensions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.dimensions label, #drop-zone label { font-weight: 600; }
+
+input[type="file"], input[type="number"] { width: 100%; }
+
+input[type="number"] {
+  margin-top: .35rem;
+  padding: .5rem;
+  border: 1px solid #69837b;
+  border-radius: .25rem;
+}
+
+button.primary {
+  background: #173e37;
+  color: white;
+  border-color: #173e37;
+  font-weight: 700;
+}
+button.primary:not(:disabled):hover { background: #285a50; }
+
+:focus-visible { outline: 2px solid #254f84; outline-offset: 3px; }
+
+.result {
+  padding: .5rem 1rem 1rem;
+  border: 1px solid #c1d0c5;
+  border-radius: .25rem;
+  background: #f7faf6;
+}
+#status { overflow-wrap: anywhere; font-weight: 600; }
+#status[data-result="fail"], #status[data-result="error"] { color: #8b2926; }
+#status[data-result="pass"] { color: #205b3d; }
+
+#preview { display: block; width: 100%; margin: 0 0 .75rem; }
+
+footer { margin-top: 1rem; color: #455d56; font-size: .875rem; line-height: 1.5; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 480px) {
+  main { margin: 1.5rem auto; }
+  .dimensions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

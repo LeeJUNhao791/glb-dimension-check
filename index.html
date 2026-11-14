@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GLB Dimension Check</title>
+  <link rel="stylesheet" href="./demo/styles.css">
+  <script type="module" src="./demo/app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>GLB Dimension Check</h1>
+      <p>Check the world-axis dimensions of a static GLB against your reference in millimeters.</p>
+    </header>
+
+    <form id="check-form" aria-label="Dimension check">
+      <fieldset id="controls">
+        <legend class="sr-only">GLB file and reference dimensions</legend>
+        <div class="examples" aria-label="Sample files">
+          <span>Try a sample</span>
+          <button type="button" data-example="correct.glb">Pass example</button>
+          <button type="button" data-example="1000x-too-large.glb">1000× scale error</button>
+        </div>
+
+        <div id="drop-zone">
+          <label for="file">Drop a static .glb here or choose a file</label>
+          <input id="file" type="file" accept=".glb">
+        </div>
+
+        <div class="dimensions">
+          <label>X (mm)<input name="x" type="number" min="0" step="any" value="120" required></label>
+          <label>Y (mm)<input name="y" type="number" min="0" step="any" value="80" required></label>
+          <label>Z (mm)<input name="z" type="number" min="0" step="any" value="40" required></label>
+          <label>Tolerance (mm)<input name="tolerance" type="number" min="0" step="any" value="0.1" required></label>
+        </div>
+        <button type="submit" class="primary">Check dimensions</button>
+      </fieldset>
+    </form>
+
+    <section aria-label="Check result" class="result">
+      <p id="status" role="status">Choose a sample or a local GLB to begin.</p>
+      <div id="report" hidden>
+        <img id="preview" alt="">
+        <a id="download" download="glb-dimensions.svg">Download SVG</a>
+      </div>
+    </section>
+
+    <footer>Your GLB stays in this browser. The first check downloads the Python runtime.</footer>
+    <noscript>Enable JavaScript to run the browser demo.</noscript>
+  </main>
+</body>
+</html>
