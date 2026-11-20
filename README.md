@@ -6,7 +6,7 @@ before handing off a model for web 3D or AR.
 
 静态 GLB 尺寸验收工具。读取场景的 X、Y、Z 轴尺寸，按毫米与预期尺寸比较。
 
-[Try the browser demo / 在线试用](https://leejunhao791.github.io/glb-dimension-check/) · [Run locally](#browser-demo) · [Run the CLI](#quick-start)
+[简体中文](README.zh-CN.md) · [Try the browser demo / 在线试用](https://leejunhao791.github.io/glb-dimension-check/) · [Run locally](#browser-demo) · [Run the CLI](#quick-start)
 
 ## Browser demo
 

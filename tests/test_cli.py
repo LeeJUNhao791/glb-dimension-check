@@ -1,3 +1,4 @@
+import errno
 import json
 import os
 import struct
@@ -146,9 +147,21 @@ class CheckGLB(unittest.TestCase):
             path = Path(directory) / "expected.json"
             path.write_bytes(contract)
             alias = Path(directory) / "alias.svg"
-            os.link(path, alias)
             for output in (path, alias):
                 with self.subTest(output=output):
+                    if output == alias:
+                        try:
+                            os.link(path, alias)
+                        except OSError as error:
+                            winerror = getattr(error, "winerror", None)
+                            if winerror is None:
+                                unavailable = error.errno in (errno.EACCES, errno.EPERM, errno.ENOSYS, errno.ENOTSUP)
+                            else:
+                                # Invalid function, access denied, or not supported.
+                                unavailable = winerror in (1, 5, 50)
+                            if not unavailable:
+                                raise
+                            self.skipTest(f"Cannot create a hard link: {error}")
                     result = self.run_cli(
                         ROOT / "examples/correct.glb", "--expect", str(path), "--svg", str(output),
                     )
