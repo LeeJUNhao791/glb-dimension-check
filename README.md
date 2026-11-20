@@ -36,6 +36,15 @@ To publish the static demo with GitHub Pages, choose **Deploy from a branch**
 under **Settings → Pages**. Select the branch containing the demo and its
 **/(root)** folder. The page uses relative paths and requires no build step.
 
+### Hammond 1590B browser check
+
+The online demo checked a Hammond 1590B enclosure using **112.4 × 60.5 × 31.0 mm**
+in GLB X/Y/Z order and a **0.1 mm** per-axis tolerance. The normal export passed.
+The 1000× scale control failed and prompted the operator to check the export
+units. Both SVGs were downloaded from the browser. [Manufacturer drawing](https://www.hammfg.com/files/parts/pdf/1590B.pdf)
+
+[Normal export · PASS](examples/hammond-1590b-pass.svg) · [1000× scale control · FAIL](examples/hammond-1590b-1000x-fail.svg)
+
 ## Quick start
 
 Use Python 3.8 or newer. The script uses only the Python standard library.
