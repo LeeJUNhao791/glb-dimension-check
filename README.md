@@ -13,16 +13,19 @@ before handing off a model for web 3D or AR.
 From the repository root, run `python -m http.server 8000 --bind 127.0.0.1`
 and open [the local demo](http://127.0.0.1:8000/). Use **Pass example** or
 **1000× scale error** to check the bundled models against 120 × 80 × 40 mm
-with a 0.1 mm tolerance. To check your own static GLB, drop it onto the file
-area or choose it, enter the expected X/Y/Z dimensions and tolerance in
-millimeters, and select **Check dimensions**. For either PASS or FAIL, choose
+with a 0.1 mm tolerance by default. To check your own static GLB, drop it onto
+the file area or choose it. Enter the expected X/Y/Z dimensions and tolerance
+in millimeters, or select **Import expected.json** to fill the editable fields
+from a [JSON expectation file](#check-against-a-json-expectation-file). A file
+with no tolerance uses 0.1 mm, and samples use the current fields after a
+successful import. Select **Check dimensions**. For either PASS or FAIL, choose
 **Download SVG** for the dimension card or **Download JSON** for the same
 structured report the CLI prints.
 
-The demo runs the CLI checker in the browser with Pyodide. The first check
-loads the Python runtime from jsDelivr. Local GLB files stay in the browser.
+The demo runs the CLI checker in the browser with Pyodide. The first import or
+check loads the Python runtime from jsDelivr. Local files stay in the browser.
 Use the [CLI](#quick-start) for offline checks, measurement-only reports,
-JSON expectation files, or automation with exit codes.
+or automation with exit codes.
 
 To verify the result with the CLI, run either command from the repository root
 and compare the generated card with the browser download. The second command

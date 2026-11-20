@@ -28,6 +28,11 @@
           <input id="file" type="file" accept=".glb">
         </div>
 
+        <div>
+          <label for="expectation">Import expected.json</label>
+          <input id="expectation" type="file" accept=".json,application/json">
+        </div>
+
         <div class="dimensions">
           <label>X (mm)<input name="x" type="number" min="0" step="any" value="120" required></label>
           <label>Y (mm)<input name="y" type="number" min="0" step="any" value="80" required></label>
@@ -47,7 +52,7 @@
       </div>
     </section>
 
-    <footer>Your GLB stays in this browser. The first check downloads the Python runtime.</footer>
+    <footer>Your files stay in this browser. The first import or check downloads the Python runtime.</footer>
     <noscript>Enable JavaScript to run the browser demo.</noscript>
   </main>
 </body>
