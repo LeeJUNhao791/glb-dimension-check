@@ -5,16 +5,18 @@ const dropZone = document.querySelector("#drop-zone");
 const status = document.querySelector("#status");
 const report = document.querySelector("#report");
 const preview = document.querySelector("#preview");
-const download = document.querySelector("#download");
+const downloadSvg = document.querySelector("#download");
+const downloadJson = document.querySelector("#download-json");
 let worker;
-let svgUrl;
 
 function clearReport(message = "") {
   report.hidden = true;
-  if (svgUrl) URL.revokeObjectURL(svgUrl);
-  svgUrl = undefined;
   preview.removeAttribute("src");
-  download.removeAttribute("href");
+  for (const link of [downloadSvg, downloadJson]) {
+    const url = link.getAttribute("href");
+    if (url) URL.revokeObjectURL(url);
+    link.removeAttribute("href");
+  }
   delete status.dataset.result;
   status.textContent = message;
 }
@@ -50,14 +52,17 @@ async function check(filename, readBytes) {
     const hint = result.diagnosis?.hint;
     status.dataset.result = result.status;
     status.textContent = result.status.toUpperCase() + " · " + filename + (hint ? " · " + hint : "");
-    svgUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const svgUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     preview.src = svgUrl;
     preview.alt = ["X", "Y", "Z"].map(axis => {
       const key = axis.toLowerCase();
       const actual = Number(result.dimensions_mm[key].toPrecision(7));
       return axis + " measured " + actual + " mm, expected " + result.expected_mm[key] + " mm";
     }).join(". ");
-    download.href = svgUrl;
+    downloadSvg.href = svgUrl;
+    downloadJson.href = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2) + "\n"], {
+      type: "application/json",
+    }));
     report.hidden = false;
   } catch (error) {
     status.dataset.result = "error";
@@ -76,6 +81,7 @@ function checkLocal(event) {
 
 form.addEventListener("submit", checkLocal);
 form.addEventListener("input", () => clearReport("Ready to check."));
+form.addEventListener("reset", () => clearReport("Ready to check."));
 
 for (const button of document.querySelectorAll("[data-example]")) {
   button.addEventListener("click", () => {

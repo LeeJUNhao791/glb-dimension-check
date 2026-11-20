@@ -43,9 +43,9 @@ fieldset {
 
 .examples span { margin-right: .25rem; }
 
-button, input, #download { font: inherit; }
+button, input, .download { font: inherit; }
 
-button, #download {
+button, .download {
   display: inline-block;
   width: fit-content;
   padding: .5rem .75rem;
@@ -57,7 +57,7 @@ button, #download {
 }
 
 button:disabled, input:disabled { opacity: .65; cursor: wait; }
-button:not(:disabled):hover, #download:hover { background: #dfece3; }
+button:not(:disabled):hover, .download:hover { background: #dfece3; }
 
 #drop-zone {
   display: grid;
