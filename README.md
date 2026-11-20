@@ -15,8 +15,9 @@ and open [the local demo](http://127.0.0.1:8000/). Use **Pass example** or
 **1000× scale error** to check the bundled models against 120 × 80 × 40 mm
 with a 0.1 mm tolerance. To check your own static GLB, drop it onto the file
 area or choose it, enter the expected X/Y/Z dimensions and tolerance in
-millimeters, and select **Check dimensions**. Both PASS and FAIL results let
-you download the SVG card.
+millimeters, and select **Check dimensions**. For either PASS or FAIL, choose
+**Download SVG** for the dimension card or **Download JSON** for the same
+structured report the CLI prints.
 
 The demo runs the CLI checker in the browser with Pyodide. The first check
 loads the Python runtime from jsDelivr. Local GLB files stay in the browser.

@@ -8,7 +8,7 @@
 
 1. 打开在线示例，点击 **Pass example** 和 **1000× scale error**。两个样例共用 `120 × 80 × 40 mm` 的参考尺寸和每轴 `0.1 mm` 的容差，结果分别为 PASS 和 FAIL。
 2. 检查自己的模型时，拖入一个 `.glb` 文件，按场景的 X、Y、Z 轴输入预期尺寸和容差，再点击 **Check dimensions**。
-3. 点击 **Download SVG** 保存验收卡。验收卡包含每轴的实测尺寸、预期尺寸和有符号偏差。
+3. PASS 和 FAIL 均可下载。点击 **Download SVG** 保存验收卡，或点击 **Download JSON** 保存与命令行输出一致的检查报告。
 
 网页使用 Pyodide 在浏览器内运行 Python 检查器。首次检查会从 jsDelivr 加载运行时，你选择的 GLB 文件留在浏览器中。纯离线检查可使用下面的命令行。
 
