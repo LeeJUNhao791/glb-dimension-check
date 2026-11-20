@@ -1,12 +1,15 @@
 const form = document.querySelector("#check-form");
 const controls = document.querySelector("#controls");
 const fileInput = document.querySelector("#file");
+const expectationInput = document.querySelector("#expectation");
+const dimensionFields = ["x", "y", "z", "tolerance"].map(name => form.elements[name]);
 const dropZone = document.querySelector("#drop-zone");
 const status = document.querySelector("#status");
 const report = document.querySelector("#report");
 const preview = document.querySelector("#preview");
 const downloadSvg = document.querySelector("#download");
 const downloadJson = document.querySelector("#download-json");
+let hasImportedExpectation = false;
 let worker;
 
 function clearReport(message = "") {
@@ -21,7 +24,7 @@ function clearReport(message = "") {
   status.textContent = message;
 }
 
-function runInWorker(bytes, values) {
+function runInWorker(message) {
   return new Promise((resolve, reject) => {
     worker ??= new Worker("./demo/check-worker.js", { type: "module" });
     worker.onmessage = ({ data }) => {
@@ -33,7 +36,7 @@ function runInWorker(bytes, values) {
       worker = undefined;
       reject(new Error("The browser checker could not start. Reload the page and try again."));
     };
-    worker.postMessage({ bytes, values }, [bytes]);
+    worker.postMessage(message, [message.bytes]);
   });
 }
 
@@ -45,10 +48,10 @@ async function check(filename, readBytes) {
     status.textContent = "Choose a static .glb file.";
     return;
   }
-  const values = ["x", "y", "z", "tolerance"].map(name => form.elements[name].value);
+  const values = dimensionFields.map(field => field.value);
   controls.disabled = true;
   try {
-    const { result, svg } = await runInWorker(await readBytes(), values);
+    const { result, svg } = await runInWorker({ type: "check", bytes: await readBytes(), values });
     const hint = result.diagnosis?.hint;
     status.dataset.result = result.status;
     status.textContent = result.status.toUpperCase() + " · " + filename + (hint ? " · " + hint : "");
@@ -79,13 +82,33 @@ function checkLocal(event) {
   else clearReport("Choose or drop a .glb file, or try a sample.");
 }
 
+expectationInput.addEventListener("change", async () => {
+  const file = expectationInput.files[0];
+  if (controls.disabled || !file) return;
+  expectationInput.value = "";
+  clearReport("Importing " + file.name + "…");
+  controls.disabled = true;
+  try {
+    const { values } = await runInWorker({ type: "expectation", bytes: await file.arrayBuffer() });
+    dimensionFields.forEach((field, index) => { field.value = values[index]; });
+    hasImportedExpectation = true;
+    status.textContent = "Imported " + file.name + ". Ready to check.";
+  } catch (error) {
+    status.dataset.result = "error";
+    status.textContent = "Could not import " + file.name + " · " + error.message;
+  } finally {
+    controls.disabled = false;
+  }
+});
+
 form.addEventListener("submit", checkLocal);
 form.addEventListener("input", () => clearReport("Ready to check."));
 form.addEventListener("reset", () => clearReport("Ready to check."));
 
 for (const button of document.querySelectorAll("[data-example]")) {
   button.addEventListener("click", () => {
-    form.reset();
+    if (hasImportedExpectation) fileInput.value = "";
+    else form.reset();
     const filename = button.dataset.example;
     check(filename, async () => {
       const response = await fetch("./examples/" + filename);

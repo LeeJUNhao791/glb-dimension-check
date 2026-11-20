@@ -15,7 +15,14 @@ import json
 import sys
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
-from check_glb import main
+from check_glb import main, read_expectation
+
+def import_expectation():
+    try:
+        dimensions, tolerance = read_expectation(Path("expected.json"))
+    except (OSError, ValueError, RecursionError) as error:
+        return json.dumps({"error": str(error)})
+    return json.dumps({"values": [*dimensions, tolerance]})
 
 def check(x, y, z, tolerance):
     output, errors = io.StringIO(), io.StringIO()
@@ -35,22 +42,24 @@ def check(x, y, z, tolerance):
 
 check
 `);
-  return { pyodide, run };
+  return { pyodide, run, importExpectation: pyodide.globals.get("import_expectation") };
 }
 
-self.onmessage = async ({ data: { bytes, values } }) => {
+self.onmessage = async ({ data: { type, bytes, values } }) => {
   checker ??= loadChecker().catch(() => {
     checker = undefined;
     throw new Error("The Python runtime could not load. Check your connection to jsDelivr and try again.");
   });
   try {
-    const { pyodide, run } = await checker;
-    pyodide.FS.writeFile("input.glb", new Uint8Array(bytes));
+    const { pyodide, run, importExpectation } = await checker;
+    const isImport = type === "expectation";
+    const filename = isImport ? "expected.json" : "input.glb";
+    pyodide.FS.writeFile(filename, new Uint8Array(bytes));
     try {
-      self.postMessage(JSON.parse(run(...values)));
+      self.postMessage(JSON.parse(isImport ? importExpectation() : run(...values)));
     } finally {
-      pyodide.FS.unlink("input.glb");
-      if (pyodide.FS.analyzePath("result.svg").exists) pyodide.FS.unlink("result.svg");
+      pyodide.FS.unlink(filename);
+      if (!isImport && pyodide.FS.analyzePath("result.svg").exists) pyodide.FS.unlink("result.svg");
     }
   } catch (error) {
     self.postMessage({ error: error.message });
