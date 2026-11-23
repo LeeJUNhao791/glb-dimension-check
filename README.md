@@ -1,5 +1,9 @@
 # GLB Dimension Check
 
+[![CI](https://github.com/LeeJUNhao791/glb-dimension-check/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/LeeJUNhao791/glb-dimension-check/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/LeeJUNhao791/glb-dimension-check)](https://github.com/LeeJUNhao791/glb-dimension-check/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Measure the real-world dimensions encoded in a static GLB. Compare the scene's
 X, Y, and Z dimensions with your reference measurements to catch scale mistakes
 before handing off a model for web 3D or AR.
