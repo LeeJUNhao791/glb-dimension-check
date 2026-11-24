@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="650" height="485" viewBox="0 0 650 485" role="img" aria-labelledby="title desc">
+  <title id="title">Four-hole mounting plate, drawing MP-001, revision A</title>
+  <desc id="desc">Top and front views of a 64 by 40 by 6 millimetre mounting plate. The overall tolerance is plus or minus 0.20 millimetres on each axis. Four 4.5 millimetre through holes are arranged on a 48 by 24 millimetre pattern, and the central through cutout is 20 by 12 millimetres.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#34445c"/>
+    </marker>
+  </defs>
+  <rect width="650" height="485" fill="#fff"/>
+  <g font-family="Arial, sans-serif" fill="#192534">
+    <text x="26" y="35" font-size="23" font-weight="bold">Four-hole mounting plate</text>
+    <text x="26" y="57" font-size="14">MP-001 · Rev A · Dimensions in mm</text>
+  </g>
+  <g stroke="#192534" stroke-width="2" fill="none">
+    <rect x="120" y="125" width="320" height="200"/>
+    <circle cx="160" cy="165" r="11.25"/>
+    <circle cx="400" cy="165" r="11.25"/>
+    <circle cx="160" cy="285" r="11.25"/>
+    <circle cx="400" cy="285" r="11.25"/>
+    <rect x="230" y="195" width="100" height="60"/>
+    <rect x="120" y="380" width="320" height="30"/>
+  </g>
+  <g stroke="#8b98a8" stroke-width="1" stroke-dasharray="10 4 2 4">
+    <path d="M280 119 V331 M114 225 H446"/>
+    <path d="M144 165 H176 M160 149 V181 M384 165 H416 M400 149 V181 M144 285 H176 M160 269 V301 M384 285 H416 M400 269 V301"/>
+  </g>
+  <g fill="none" stroke="#34445c" stroke-width="1">
+    <path d="M120 119 V84 M440 119 V84 M115 125 H75 M115 325 H75 M446 380 H482 M446 410 H482"/>
+    <g marker-start="url(#arrow)" marker-end="url(#arrow)">
+      <path d="M120 96 H440"/>
+      <path d="M87 125 V325"/>
+      <path d="M470 380 V410"/>
+    </g>
+    <path d="M412 165 H485" marker-start="url(#arrow)"/>
+    <path d="M331 243 H485" marker-start="url(#arrow)"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#192534">
+    <text x="280" y="89" text-anchor="middle">X · 64 ±0.20</text>
+    <text transform="translate(79 225) rotate(-90)" text-anchor="middle">Y · 40 ±0.20</text>
+    <text x="488" y="400">Z · 6 ±0.20</text>
+    <text x="493" y="158">4 × Ø4.5 THRU</text>
+    <text x="493" y="179">48 × 24 hole pattern</text>
+    <text x="493" y="235">20 × 12 THRU</text>
+    <text x="493" y="256">Centered opening</text>
+    <text x="280" y="348" text-anchor="middle">Top · XY</text>
+    <text x="280" y="433" text-anchor="middle">Front · XZ</text>
+    <text x="26" y="463">Top-view center is X0/Y0. Z0 is the bottom mounting face.</text>
+  </g>
+</svg>

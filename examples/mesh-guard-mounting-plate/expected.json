@@ -1,0 +1,8 @@
+{
+  "expected_mm": {
+    "x": 64,
+    "y": 40,
+    "z": 6
+  },
+  "tolerance_mm": 0.2
+}

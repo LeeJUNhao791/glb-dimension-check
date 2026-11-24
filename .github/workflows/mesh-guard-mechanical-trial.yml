@@ -1,0 +1,30 @@
+name: Mesh Guard mechanical trial
+
+on:
+  pull_request:
+    branches: [verification/mesh-guard-mechanical-base]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check mounting plate dimensions
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Compare mounting plate against the drawing
+        id: mesh
+        uses: LeeJUNhao791/mesh-guard@v0.3.0
+        with:
+          stl: examples/mesh-guard-mounting-plate/mounting_plate.stl
+          expect: examples/mesh-guard-mounting-plate/expected.json
+          unit: mm
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: ${{ !cancelled() && steps.mesh.outputs.report-path != '' }}
+        with:
+          name: mounting-plate-dimension-report
+          path: ${{ steps.mesh.outputs.report-path }}
+          if-no-files-found: error
