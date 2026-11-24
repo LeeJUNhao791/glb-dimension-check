@@ -10,7 +10,7 @@ from OCP.StlAPI import StlAPI_Writer
 from OCP.gp import gp_Ax2, gp_Dir, gp_Pnt
 
 
-LENGTH_MM = 64.0
+LENGTH_MM = 65.0
 WIDTH_MM = 40.0
 THICKNESS_MM = 6.0
 HOLE_DIAMETER_MM = 4.5
