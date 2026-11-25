@@ -1,0 +1,53 @@
+name: MeshAssert second CAD verification (intentional negative case)
+
+on:
+  push:
+    branches: ['verification/meshassert-second-cad-1125']
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: MeshAssert (${{ matrix.case }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: nominal
+            glb: ribbed_bracket.glb
+          - case: intentional-glb-height-mismatch
+            glb: ribbed_bracket_tall.glb
+    env:
+      EXAMPLE: examples/meshassert-ribbed-bracket
+      GLB_NAME: ${{ matrix.glb }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify clean checkout
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain)"
+          git log -1 --format='Verified clean checkout %H'
+          sha256sum "$EXAMPLE/fixtures/expected.json" "$EXAMPLE/fixtures/ribbed_bracket.stl" "$EXAMPLE/fixtures/$GLB_NAME"
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Check CAD-axis dimensions
+        run: |
+          python -B "$EXAMPLE/meshassert.py" \
+            --expect "$EXAMPLE/fixtures/expected.json" \
+            --stl "$EXAMPLE/fixtures/ribbed_bracket.stl" --stl-unit mm \
+            --glb "$EXAMPLE/fixtures/$GLB_NAME" > "$RUNNER_TEMP/meshassert-report.json"
+      - name: Upload MeshAssert JSON
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: meshassert-${{ matrix.case }}
+          path: ${{ runner.temp }}/meshassert-report.json
+          if-no-files-found: error
