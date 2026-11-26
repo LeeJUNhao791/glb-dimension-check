@@ -188,6 +188,10 @@ client can load [SKILL.md](SKILL.md). Try asking it to check a GLB against
 The unit conversion follows the
 [glTF 2.0 specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units).
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, verification commands, and the dimension-checking scope.
+
 ## License
 
 [MIT](LICENSE)
