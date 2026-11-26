@@ -39,6 +39,14 @@ python -m http.server 8000 --bind 127.0.0.1
 
 **Download SVG** 导出便于分享的验收卡。卡片对数值作显示格式化，判定使用未格式化的数值；接近容差边界时请查看 JSON 中的偏差和 `status`，不要根据卡片显示的小数位重新判定。float32 顶点和导出变换可能带来微小数值误差，应根据交付要求设置容差。
 
+**尺寸正确 · PASS**
+
+![120 × 80 × 40 mm 样例的 PASS 验收卡](examples/correct.svg)
+
+**1000 倍比例错误 · FAIL**
+
+![导出比例为预期 1000 倍的 GLB 样例的 FAIL 验收卡](examples/1000x-too-large.svg)
+
 ## 命令行与离线检查
 
 在仓库根目录运行，使用 Python 3.8 或更新版本，无须安装第三方库。
@@ -68,5 +76,9 @@ python scripts/check_glb.py examples/measure-only.glb
 ```sh
 python -B -m unittest discover -s tests -v
 ```
+
+## 参与贡献
+
+环境要求、验证命令和尺寸检查范围见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 [MIT 许可证](LICENSE)
