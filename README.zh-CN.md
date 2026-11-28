@@ -8,6 +8,10 @@
 
 按毫米读取静态 GLB 的场景包围盒，并逐轴对照图纸或交付尺寸。可在 Web 3D 或 AR 交付前发现导出单位和轴顺序错误。
 
+| 尺寸正确 · PASS | 1000 倍比例错误 · FAIL |
+| --- | --- |
+| ![120 × 80 × 40 mm 样例的 PASS 验收卡](examples/correct.svg) | ![导出比例为预期 1000 倍的 GLB 样例的 FAIL 验收卡](examples/1000x-too-large.svg) |
+
 ## 浏览器快速体验
 
 1. 打开在线示例，点击 **Pass example** 和 **1000× scale error**。两个样例默认使用 `120 × 80 × 40 mm` 的参考尺寸和每轴 `0.1 mm` 的容差，结果分别为 PASS 和 FAIL。
@@ -39,13 +43,6 @@ python -m http.server 8000 --bind 127.0.0.1
 
 **Download SVG** 导出便于分享的验收卡。卡片对数值作显示格式化，判定使用未格式化的数值；接近容差边界时请查看 JSON 中的偏差和 `status`，不要根据卡片显示的小数位重新判定。float32 顶点和导出变换可能带来微小数值误差，应根据交付要求设置容差。
 
-**尺寸正确 · PASS**
-
-![120 × 80 × 40 mm 样例的 PASS 验收卡](examples/correct.svg)
-
-**1000 倍比例错误 · FAIL**
-
-![导出比例为预期 1000 倍的 GLB 样例的 FAIL 验收卡](examples/1000x-too-large.svg)
 
 ## 命令行与离线检查
 

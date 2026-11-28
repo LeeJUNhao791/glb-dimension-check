@@ -12,6 +12,10 @@ before handing off a model for web 3D or AR.
 
 [简体中文](README.zh-CN.md) · [Try the browser demo / 在线试用](https://leejunhao791.github.io/glb-dimension-check/) · [Run locally](#browser-demo) · [Run the CLI](#quick-start)
 
+| Correct dimensions | 1000× scale error |
+| --- | --- |
+| ![PASS card for the 120 × 80 × 40 mm sample](examples/correct.svg) | ![FAIL card for a GLB exported at 1000 times the expected scale](examples/1000x-too-large.svg) |
+
 ## Browser demo
 
 From the repository root, run `python -m http.server 8000 --bind 127.0.0.1`
@@ -121,13 +125,6 @@ python scripts/check_glb.py examples/correct.glb --expected-mm 120 80 40 --svg e
 python scripts/check_glb.py examples/1000x-too-large.glb --expected-mm 120 80 40 --svg examples/1000x-too-large.svg
 ```
 
-**Correct dimensions**
-
-![PASS card for the 120 × 80 × 40 mm sample](examples/correct.svg)
-
-**1000× scale error**
-
-![FAIL card for a GLB exported at 1000 times the expected scale](examples/1000x-too-large.svg)
 
 ## Diagnose a mismatch
 
